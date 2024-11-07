@@ -43,6 +43,7 @@ export default function Component() {
         const recognizedText = ret.data.text
         setText(recognizedText)
         console.log(recognizedText)
+        console.log("sending request with " + text ) 
 
         await worker.terminate()
         const response = await fetch("/api/createReceiptTable", {
@@ -50,7 +51,7 @@ export default function Component() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ text: text }),
+          body: JSON.stringify({ text: recognizedText }),
         })
 
         const data = await response.json()
@@ -75,14 +76,14 @@ export default function Component() {
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-4">
             <Input type="file" accept="image/*" onChange={handleImageUpload} className="flex-grow" />
-            <Button onClick={handleButtonClick} disabled={!image || isLoading}>
+          </div>
+          <Button className="w-full" onClick={handleButtonClick} disabled={!image || isLoading}>
               {isLoading ? (
                 <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                "Upload and Recognize"
+                "Recognize"
               )}
             </Button>
-          </div>
           {imagePreview && (
             <div className="mt-4">
               <Image
@@ -90,10 +91,11 @@ export default function Component() {
                 alt="Receipt preview"
                 width={300}
                 height={400}
-                className="rounded-lg object-contain"
+                className="rounded-lg object-contain w-auto"
               />
             </div>
           )}
+         
         </CardContent>
       </Card>
 
