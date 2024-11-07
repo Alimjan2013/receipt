@@ -1,10 +1,11 @@
 "use client";
-import { createWorker } from 'tesseract.js';
-import { useState } from 'react';
+import { createWorker } from "tesseract.js";
+import { useState } from "react";
 
 export default function Home() {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [responseMessage, setResponseMessage] = useState("");
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -14,11 +15,25 @@ export default function Home() {
 
   const handleButtonClick = async () => {
     if (image) {
-      const worker = await createWorker('eng');
+      const worker = await createWorker("eng");
       const ret = await worker.recognize(image);
-      setText(ret.data.text);
-      console.log(ret.data.text);
+      const recognizedText = ret.data.text;
+      setText(recognizedText);
+      console.log(recognizedText);
+      
+
       await worker.terminate();
+      const response = await fetch("/api/createReceiptTable", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: recognizedText }),
+      });
+
+      const data = await response.json();
+      setResponseMessage(data);
+      console.log(data);
     }
   };
 
@@ -28,6 +43,7 @@ export default function Home() {
       <button onClick={handleButtonClick}>Upload and Recognize</button>
       <div>
         {text}
+        {responseMessage}
       </div>
     </div>
   );

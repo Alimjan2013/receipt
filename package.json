@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^0.0.72",
+    "ai": "^3.4.33",
     "next": "15.0.2",
+    "openai": "^4.71.1",
     "react": "19.0.0-rc-02c0e824-20241028",
     "react-dom": "19.0.0-rc-02c0e824-20241028",
     "tesseract.js": "^5.1.1"
