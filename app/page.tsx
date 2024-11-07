@@ -1,71 +1,109 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { createWorker } from "tesseract.js"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { HeartIcon, Loader2Icon } from "lucide-react"
-import Image from "next/image"
+import { useState, useEffect } from "react";
+import { createWorker } from "tesseract.js";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HeartIcon, Loader2Icon } from "lucide-react";
+import Image from "next/image";
 
 interface Item {
-  item: string
-  price_eur: number
+  item: string;
+  price_eur: number;
 }
 
 interface ResponseMessage {
-  date: string
-  items: Item[]
+  date: string;
+  items: Item[];
 }
 
 export default function Component() {
-  const [text, setText] = useState("")
-  const [image, setImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [responseMessage, setResponseMessage] = useState<ResponseMessage | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [text, setText] = useState("");
+  const [token, setToken] = useState("");
+  const [database_id, setDatabase_id] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [responseMessage, setResponseMessage] =
+    useState<ResponseMessage | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    const savedDatabaseId = localStorage.getItem("database_id");
+    if (savedToken) setToken(savedToken);
+    if (savedDatabaseId) setDatabase_id(savedDatabaseId);
+  }, []);
+
+  const handleSaveCredentials = () => {
+    localStorage.setItem("token", token);
+    localStorage.setItem("database_id", database_id);
+    alert("Credentials saved!");
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0]
-      setImage(file)
-      setImagePreview(URL.createObjectURL(file))
+      const file = event.target.files[0];
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
-  }
+  };
+  const handleUploadNotion = async () => {
+    console.log("uploading to notion");
+    const response = await fetch("/api/uploadToNotion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        table: responseMessage,
+        auth: { token: token, database_id: database_id },
+      }),
+    });
+    const data = await response.json();
+    console.log(data);
+  };
 
   const handleButtonClick = async () => {
     if (image) {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const worker = await createWorker("eng")
-        const ret = await worker.recognize(image)
-        const recognizedText = ret.data.text
-        setText(recognizedText)
-        console.log(recognizedText)
-        console.log("sending request with " + text ) 
+        const worker = await createWorker("eng");
+        const ret = await worker.recognize(image);
+        const recognizedText = ret.data.text;
+        setText(recognizedText);
+        console.log(recognizedText);
+        console.log("sending request with " + text);
 
-        await worker.terminate()
+        await worker.terminate();
         const response = await fetch("/api/createReceiptTable", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ text: recognizedText }),
-        })
+        });
 
-        const data = await response.json()
-        const jsonString = data.replace(/```json|```/g, "").trim()
-        const jsonObject = JSON.parse(jsonString)
-        setResponseMessage(jsonObject)
-        console.log(jsonObject)
+        const data = await response.json();
+        const jsonString = data.replace(/```json|```/g, "").trim();
+        const jsonObject = JSON.parse(jsonString);
+        setResponseMessage(jsonObject);
+        console.log(jsonObject);
       } catch (error) {
-        console.error("Error processing image:", error)
+        console.error("Error processing image:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -75,15 +113,25 @@ export default function Component() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-4">
-            <Input type="file" accept="image/*" onChange={handleImageUpload} className="flex-grow" />
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="flex-grow"
+            />
           </div>
-          <Button className="w-full" onClick={handleButtonClick} disabled={!image || isLoading}>
-              {isLoading ? (
-                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                "Recognize"
-              )}
-            </Button>
+          
+          <Button
+            className="w-full"
+            onClick={handleButtonClick}
+            disabled={!image || isLoading}
+          >
+            {isLoading ? (
+              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              "Recognize"
+            )}
+          </Button>
           {imagePreview && (
             <div className="mt-4">
               <Image
@@ -95,7 +143,6 @@ export default function Component() {
               />
             </div>
           )}
-         
         </CardContent>
       </Card>
 
@@ -105,7 +152,33 @@ export default function Component() {
             <CardTitle>Receipt Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-lg font-semibold">Date: {responseMessage.date}</p>
+          <div className="flex items-center space-x-4 mb-3">
+            <Input
+              type="text"
+              placeholder="Enter Notion Token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              className="flex-grow"
+            />
+            <Input
+              type="text"
+              placeholder="Enter Database ID"
+              value={database_id}
+              onChange={(e) => setDatabase_id(e.target.value)}
+              className="flex-grow"
+            />
+            <Button onClick={handleSaveCredentials}>Save</Button>
+          </div>
+            <Button 
+              className="w-full" 
+              onClick={handleUploadNotion} 
+              disabled={!token || !database_id}
+            >
+              Upload to Notion
+            </Button>
+            <p className="mb-4 text-lg font-semibold">
+              Date: {responseMessage.date}
+            </p>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -117,7 +190,9 @@ export default function Component() {
                 {responseMessage.items.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell>{item.item}</TableCell>
-                    <TableCell className="text-right">{item.price_eur.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      {item.price_eur.toFixed(2)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -128,9 +203,11 @@ export default function Component() {
 
       <div className="mt-8 text-center">
         <Button variant="ghost" className="text-sm">
-          Made with <HeartIcon className="inline-block h-4 w-4 text-red-500 mx-1" /> from Ali
+          Made with{" "}
+          <HeartIcon className="inline-block h-4 w-4 text-red-500 mx-1" /> from
+          Ali
         </Button>
       </div>
     </div>
-  )
+  );
 }
