@@ -2,10 +2,20 @@
 import { createWorker } from "tesseract.js";
 import { useState } from "react";
 
+interface Item {
+  item: string;
+  price_eur: number;
+}
+
+interface ResponseMessage {
+  date: string;
+  items: Item[];
+}
+
 export default function Home() {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [responseMessage, setResponseMessage] = useState("");
+  const [responseMessage, setResponseMessage] = useState<ResponseMessage | null>(null);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -28,12 +38,14 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: recognizedText }),
+        body: JSON.stringify({ text: text }),
       });
 
       const data = await response.json();
-      setResponseMessage(data);
-      console.log(data);
+      const jsonString = data.replace(/```json|```/g, '').trim();
+      const jsonObject = JSON.parse(jsonString);
+      setResponseMessage(jsonObject);
+      console.log(jsonObject);
     }
   };
 
@@ -42,8 +54,27 @@ export default function Home() {
       <input type="file" accept="image/*" onChange={handleImageUpload} />
       <button onClick={handleButtonClick}>Upload and Recognize</button>
       <div>
-        {text}
-        {responseMessage}
+        {responseMessage && (
+        <div>
+          <h3>Date: {responseMessage.date}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Price (EUR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {responseMessage.items.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.item}</td>
+                  <td>{item.price_eur}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       </div>
     </div>
   );

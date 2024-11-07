@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const { text }: { text: string } = await request.json();
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
