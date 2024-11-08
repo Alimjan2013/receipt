@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HeartIcon, Loader2Icon } from "lucide-react";
 import Image from "next/image";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -271,7 +271,6 @@ export default function Component() {
           Ali
         </Button>
       </div>
-      <Toaster />
     </div>
   );
 }
