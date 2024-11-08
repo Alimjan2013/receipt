@@ -138,7 +138,8 @@ export default function Component() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Card className="mb-8">
+      <div className="md:grid grid-cols-2 grid-rows-1 gap-2 ">
+      <Card className="md:mb-0 mb-8">
         <CardHeader>
           <CardTitle>Receipt OCR</CardTitle>
         </CardHeader>
@@ -185,7 +186,7 @@ export default function Component() {
           <CardContent>
             <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
               <DialogTrigger asChild>
-                <Button className="w-full mb-4">
+                <Button variant={"secondary"} className="w-full mb-4">
                   {token && database_id ? "Update Notion Credentials" : "Set Notion Credentials"}
                 </Button>
               </DialogTrigger>
@@ -246,6 +247,8 @@ export default function Component() {
         </Card>
       )}
 
+      </div>
+      
       <div className="mt-8 text-center">
         <Button variant="ghost" className="text-sm">
           Made with{" "}
