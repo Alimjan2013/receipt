@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 
 interface Item {
   item: string
@@ -103,6 +104,21 @@ export default function ReceiptDetails({
     setSelectedItems(prev => prev.map((item, i) => i === index ? !item : item))
   }
 
+  const handleItemChange = (index: number, field: 'item' | 'price_eur', value: string) => {
+    setLocalResponseMessage(prev => {
+      const newItems = [...prev.items]
+      if (field === 'item') {
+        newItems[index] = { ...newItems[index], item: value }
+      } else {
+        const numValue = parseFloat(value)
+        if (!isNaN(numValue)) {
+          newItems[index] = { ...newItems[index], price_eur: numValue }
+        }
+      }
+      return { ...prev, items: newItems }
+    })
+  }
+
   return (
     <Card className="w-full max-w-3xl">
       <CardHeader>
@@ -175,9 +191,22 @@ export default function ReceiptDetails({
                     onCheckedChange={() => toggleItemSelection(index)}
                   />
                 </TableCell>
-                <TableCell>{item.item}</TableCell>
+                <TableCell>
+                  <Input
+                    value={item.item}
+                    onChange={(e) => handleItemChange(index, 'item', e.target.value)}
+                    className="w-full px-0 py-0 border-0"
+                  />
+                </TableCell>
                 <TableCell className="text-right">
-                  {item.price_eur.toFixed(2)}
+                  <Input
+                    type="number"
+                    value={item.price_eur.toFixed(2)}
+                    onChange={(e) => handleItemChange(index, 'price_eur', e.target.value)}
+                    className="w-full text-right px-0 py-0 border-0"
+                    step="0.01"
+                    min="0"
+                  />
                 </TableCell>
               </TableRow>
             ))}
