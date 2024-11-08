@@ -15,6 +15,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HeartIcon, Loader2Icon } from "lucide-react";
 import Image from "next/image";
+import { toast, Toaster } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Item {
   item: string;
@@ -32,21 +40,28 @@ export default function Component() {
   const [database_id, setDatabase_id] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [responseMessage, setResponseMessage] =
-    useState<ResponseMessage | null>(null);
+  const [responseMessage, setResponseMessage] = useState<ResponseMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedDatabaseId = localStorage.getItem("database_id");
     if (savedToken) setToken(savedToken);
     if (savedDatabaseId) setDatabase_id(savedDatabaseId);
+    if (!savedToken || !savedDatabaseId) {
+      setShowCredentialsDialog(true);
+    }
   }, []);
 
   const handleSaveCredentials = () => {
     localStorage.setItem("token", token);
     localStorage.setItem("database_id", database_id);
-    alert("Credentials saved!");
+    setShowCredentialsDialog(false);
+    toast.success('Credentials saved', {
+      description: 'Your Notion credentials have been saved.',
+    });
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,20 +71,33 @@ export default function Component() {
       setImagePreview(URL.createObjectURL(file));
     }
   };
+
   const handleUploadNotion = async () => {
-    console.log("uploading to notion");
-    const response = await fetch("/api/uploadToNotion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        table: responseMessage,
-        auth: { token: token, database_id: database_id },
-      }),
-    });
-    const data = await response.json();
-    console.log(data);
+    setIsUploading(true);
+    try {
+      const response = await fetch("/api/uploadToNotion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          table: responseMessage,
+          auth: { token: token, database_id: database_id },
+        }),
+      });
+      const data = await response.json();
+      console.log(data);
+      toast.success('Upload successful', {
+        description: 'The receipt data has been uploaded to Notion.',
+      });
+    } catch (error) {
+      console.error("Error uploading to Notion:", error);
+      toast.error('Upload failed', {
+        description: 'There was an error uploading the data to Notion.',
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleButtonClick = async () => {
@@ -99,6 +127,9 @@ export default function Component() {
         console.log(jsonObject);
       } catch (error) {
         console.error("Error processing image:", error);
+        toast.error('Processing failed', {
+          description: 'There was an error processing the image.',
+        });
       } finally {
         setIsLoading(false);
       }
@@ -152,29 +183,43 @@ export default function Component() {
             <CardTitle>Receipt Details</CardTitle>
           </CardHeader>
           <CardContent>
-          <div className="flex items-center space-x-4 mb-3">
-            <Input
-              type="text"
-              placeholder="Enter Notion Token"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="flex-grow"
-            />
-            <Input
-              type="text"
-              placeholder="Enter Database ID"
-              value={database_id}
-              onChange={(e) => setDatabase_id(e.target.value)}
-              className="flex-grow"
-            />
-            <Button onClick={handleSaveCredentials}>Save</Button>
-          </div>
+            <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
+              <DialogTrigger asChild>
+                <Button className="w-full mb-4">
+                  {token && database_id ? "Update Notion Credentials" : "Set Notion Credentials"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Notion Credentials</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <Input
+                    type="text"
+                    placeholder="Enter Notion Token"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Enter Database ID"
+                    value={database_id}
+                    onChange={(e) => setDatabase_id(e.target.value)}
+                  />
+                  <Button onClick={handleSaveCredentials} className="w-full">Save</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button 
               className="w-full" 
               onClick={handleUploadNotion} 
-              disabled={!token || !database_id}
+              disabled={!token || !database_id || isUploading}
             >
-              Upload to Notion
+              {isUploading ? (
+                <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Upload to Notion"
+              )}
             </Button>
             <p className="mb-4 text-lg font-semibold">
               Date: {responseMessage.date}
@@ -208,6 +253,7 @@ export default function Component() {
           Ali
         </Button>
       </div>
+      <Toaster />
     </div>
   );
 }
