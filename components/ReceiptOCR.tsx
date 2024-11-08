@@ -48,6 +48,13 @@ export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage:
           const data = await response.json();
         const jsonString = data.replace(/```json|```/g, "").trim();
         const jsonObject = JSON.parse(jsonString);
+        const isValidDate = (dateString: string) => {
+          const date = new Date(dateString);
+          return !isNaN(date.getTime());
+        };
+        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+        
+        jsonObject.date = isValidDate(jsonObject.date) ? jsonObject.date : today;
         setResponseMessage(jsonObject);
         await worker.terminate();
       } catch (error) {

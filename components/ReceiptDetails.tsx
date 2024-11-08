@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -56,6 +56,12 @@ export default function ReceiptDetails({
   const [localResponseMessage, setLocalResponseMessage] = useState(responseMessage)
   const [selectedItems, setSelectedItems] = useState(responseMessage.items.map(() => true))
   const [date, setDate] = useState<Date | undefined>(new Date(localResponseMessage.date))
+
+  useEffect(() => {
+    setLocalResponseMessage(responseMessage)
+    setSelectedItems(responseMessage.items.map(() => true))
+    setDate(new Date(responseMessage.date))
+  }, [responseMessage])
 
   const handleDateChange = (newDate: Date | undefined) => {
     setDate(newDate)
