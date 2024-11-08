@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HeartIcon, Loader2Icon } from "lucide-react";
 import Image from "next/image";
-import { toast, Toaster } from 'sonner'
+import { toast, Toaster } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +40,8 @@ export default function Component() {
   const [database_id, setDatabase_id] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [responseMessage, setResponseMessage] = useState<ResponseMessage | null>(null);
+  const [responseMessage, setResponseMessage] =
+    useState<ResponseMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
@@ -59,8 +60,8 @@ export default function Component() {
     localStorage.setItem("token", token);
     localStorage.setItem("database_id", database_id);
     setShowCredentialsDialog(false);
-    toast.success('Credentials saved', {
-      description: 'Your Notion credentials have been saved.',
+    toast.success("Credentials saved", {
+      description: "Your Notion credentials have been saved.",
     });
   };
 
@@ -87,18 +88,23 @@ export default function Component() {
       });
       const data = await response.json();
       console.log(data);
-      toast.success('Upload successful', {
-        description: 'The receipt data has been uploaded to Notion.',
+      toast.success("Upload successful", {
+        description: "The receipt data has been uploaded to Notion.",
       });
     } catch (error) {
       console.error("Error uploading to Notion:", error);
-      toast.error('Upload failed', {
-        description: 'There was an error uploading the data to Notion.',
+      toast.error("Upload failed", {
+        description: "There was an error uploading the data to Notion.",
       });
     } finally {
       setIsUploading(false);
     }
   };
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime());
+  };
+  const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
 
   const handleButtonClick = async () => {
     if (image) {
@@ -127,8 +133,8 @@ export default function Component() {
         console.log(jsonObject);
       } catch (error) {
         console.error("Error processing image:", error);
-        toast.error('Processing failed', {
-          description: 'There was an error processing the image.',
+        toast.error("Processing failed", {
+          description: "There was an error processing the image.",
         });
       } finally {
         setIsLoading(false);
@@ -139,116 +145,125 @@ export default function Component() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="md:grid grid-cols-2 grid-rows-1 gap-2 ">
-      <Card className="md:mb-0 mb-8">
-        <CardHeader>
-          <CardTitle>Receipt OCR</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="flex-grow"
-            />
-          </div>
-          
-          <Button
-            className="w-full"
-            onClick={handleButtonClick}
-            disabled={!image || isLoading}
-          >
-            {isLoading ? (
-              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              "Recognize"
-            )}
-          </Button>
-          {imagePreview && (
-            <div className="mt-4">
-              <Image
-                src={imagePreview}
-                alt="Receipt preview"
-                width={300}
-                height={400}
-                className="rounded-lg object-contain w-auto"
+        <Card className="md:mb-0 mb-8">
+          <CardHeader>
+            <CardTitle>Receipt OCR</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="flex-grow"
               />
             </div>
-          )}
-        </CardContent>
-      </Card>
 
-      {responseMessage && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Receipt Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Dialog open={showCredentialsDialog} onOpenChange={setShowCredentialsDialog}>
-              <DialogTrigger asChild>
-                <Button variant={"secondary"} className="w-full mb-4">
-                  {token && database_id ? "Update Notion Credentials" : "Set Notion Credentials"}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Notion Credentials</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <Input
-                    type="text"
-                    placeholder="Enter Notion Token"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                  />
-                  <Input
-                    type="text"
-                    placeholder="Enter Database ID"
-                    value={database_id}
-                    onChange={(e) => setDatabase_id(e.target.value)}
-                  />
-                  <Button onClick={handleSaveCredentials} className="w-full">Save</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button 
-              className="w-full" 
-              onClick={handleUploadNotion} 
-              disabled={!token || !database_id || isUploading}
+            <Button
+              className="w-full"
+              onClick={handleButtonClick}
+              disabled={!image || isLoading}
             >
-              {isUploading ? (
+              {isLoading ? (
                 <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                "Upload to Notion"
+                "Recognize"
               )}
             </Button>
-            <p className="mb-4 text-lg font-semibold">
-              Date: {responseMessage.date}
-            </p>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-right">Price (EUR)</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {responseMessage.items.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{item.item}</TableCell>
-                    <TableCell className="text-right">
-                      {item.price_eur.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {imagePreview && (
+              <div className="mt-4">
+                <Image
+                  src={imagePreview}
+                  alt="Receipt preview"
+                  width={300}
+                  height={400}
+                  className="rounded-lg object-contain w-auto"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
 
+        {responseMessage && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Receipt Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Dialog
+                open={showCredentialsDialog}
+                onOpenChange={setShowCredentialsDialog}
+              >
+                <DialogTrigger asChild>
+                  <Button variant={"secondary"} className="w-full mb-4">
+                    {token && database_id
+                      ? "Update Notion Credentials"
+                      : "Set Notion Credentials"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Notion Credentials</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <Input
+                      type="text"
+                      placeholder="Enter Notion Token"
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Enter Database ID"
+                      value={database_id}
+                      onChange={(e) => setDatabase_id(e.target.value)}
+                    />
+                    <Button onClick={handleSaveCredentials} className="w-full">
+                      Save
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Button
+                className="w-full"
+                onClick={handleUploadNotion}
+                disabled={!token || !database_id || isUploading}
+              >
+                {isUploading ? (
+                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "Upload to Notion"
+                )}
+              </Button>
+              <p className="mb-4 text-lg font-semibold">
+                Date:{" "}
+                {isValidDate(responseMessage.date)
+                  ? responseMessage.date
+                  : today}
+              </p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead className="text-right">Price (EUR)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {responseMessage.items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{item.item}</TableCell>
+                      <TableCell className="text-right">
+                        {item.price_eur.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
-      
+
       <div className="mt-8 text-center">
         <Button variant="ghost" className="text-sm">
           Made with{" "}
