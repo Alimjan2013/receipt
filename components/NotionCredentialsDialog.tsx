@@ -8,6 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Settings } from "lucide-react";
 
 interface NotionCredentialsDialogProps {
   token: string;
@@ -41,10 +42,8 @@ export default function NotionCredentialsDialog({
       onOpenChange={setShowCredentialsDialog}
     >
       <DialogTrigger asChild>
-        <Button variant={"secondary"} className="w-full mb-4">
-          {token && database_id
-            ? "Update Notion Credentials"
-            : "Set Notion Credentials"}
+        <Button variant="ghost" size="icon">
+          <Settings className="text-gray-600" />
         </Button>
       </DialogTrigger>
       <DialogContent>
