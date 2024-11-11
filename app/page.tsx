@@ -52,7 +52,7 @@ export default function Component() {
       <div className="mt-8 text-center">
         <Button variant="ghost" className="text-sm">
           Made with{" "}
-          <HeartIcon className="inline-block h-4 w-4 text-red-500 mx-1" /> from
+          <HeartIcon className="inline-block h-4 w-4 text-red-500 mx-1" /> by
           Ali
         </Button>
       </div>
