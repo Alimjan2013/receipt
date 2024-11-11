@@ -135,7 +135,7 @@ export default function ReceiptDetails({
         <Button
           className="w-full mb-4"
           onClick={handleUploadNotion}
-          disabled={!token || !database_id || isUploading}
+          disabled={!token || !database_id || isUploading ||selectedItems.every(item => !item)}
         >
           {isUploading ? (
             <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
