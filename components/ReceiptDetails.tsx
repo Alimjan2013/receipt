@@ -1,47 +1,36 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2Icon } from "lucide-react";
-import { toast } from "sonner";
-import NotionCredentialsDialog from "./NotionCredentialsDialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon, Loader2Icon, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
+import NotionCredentialsDialog from "./NotionCredentialsDialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Item {
-  item: string;
-  price_eur: number;
+  item: string
+  price_eur: number
 }
 
 interface ResponseMessage {
-  date: string;
-  items: Item[];
+  date: string
+  items: Item[]
 }
 
 interface ReceiptDetailsProps {
-  responseMessage: ResponseMessage;
-  token: string;
-  database_id: string;
-  setToken: (token: string) => void;
-  setDatabase_id: (database_id: string) => void;
+  responseMessage: ResponseMessage
+  token: string
+  database_id: string
+  setToken: (token: string) => void
+  setDatabase_id: (database_id: string) => void
 }
 
 export default function ReceiptDetails({
@@ -51,39 +40,32 @@ export default function ReceiptDetails({
   setToken,
   setDatabase_id,
 }: ReceiptDetailsProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
-  const [localResponseMessage, setLocalResponseMessage] =
-    useState(responseMessage);
-  const [selectedItems, setSelectedItems] = useState(
-    responseMessage.items.map(() => true)
-  );
-  const [date, setDate] = useState<Date | undefined>(
-    new Date(localResponseMessage.date)
-  );
+  const [isUploading, setIsUploading] = useState(false)
+  const [showCredentialsDialog, setShowCredentialsDialog] = useState(false)
+  const [localResponseMessage, setLocalResponseMessage] = useState(responseMessage)
+  const [selectedItems, setSelectedItems] = useState(responseMessage.items.map(() => true))
+  const [date, setDate] = useState<Date | undefined>(new Date(localResponseMessage.date))
 
   useEffect(() => {
-    setLocalResponseMessage(responseMessage);
-    setSelectedItems(responseMessage.items.map(() => true));
-    setDate(new Date(responseMessage.date));
-  }, [responseMessage]);
+    setLocalResponseMessage(responseMessage)
+    setSelectedItems(responseMessage.items.map(() => true))
+    setDate(new Date(responseMessage.date))
+  }, [responseMessage])
 
   const handleDateChange = (newDate: Date | undefined) => {
-    setDate(newDate);
+    setDate(newDate)
     if (newDate) {
       setLocalResponseMessage((prev) => ({
         ...prev,
-        date: newDate.toLocaleDateString("en-CA"), // Use 'en-CA' to get YYYY-MM-DD format
-      }));
+        date: newDate.toLocaleDateString("en-CA"),
+      }))
     }
-  };
+  }
 
   const handleUploadNotion = async () => {
-    setIsUploading(true);
+    setIsUploading(true)
     try {
-      const itemsToUpload = localResponseMessage.items.filter(
-        (_, index) => selectedItems[index]
-      );
+      const itemsToUpload = localResponseMessage.items.filter((_, index) => selectedItems[index])
       const response = await fetch("/api/uploadToNotion", {
         method: "POST",
         headers: {
@@ -93,57 +75,51 @@ export default function ReceiptDetails({
           table: { ...localResponseMessage, items: itemsToUpload },
           auth: { token: token, database_id: database_id },
         }),
-      });
-      const data = await response.json();
-      console.log(data);
+      })
+      const data = await response.json()
+      console.log(data)
       toast.success("Upload successful", {
         description: "The selected receipt data has been uploaded to Notion.",
-      });
+      })
     } catch (error) {
-      console.error("Error uploading to Notion:", error);
+      console.error("Error uploading to Notion:", error)
       toast.error("Upload failed", {
         description: "There was an error uploading the data to Notion.",
-      });
+      })
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
     }
-  };
+  }
 
   const toggleSelectAll = () => {
-    setSelectedItems((prev) => prev.map(() => !prev.every(Boolean)));
-  };
+    setSelectedItems((prev) => prev.map(() => !prev.every(Boolean)))
+  }
 
   const toggleItemSelection = (index: number) => {
-    setSelectedItems((prev) =>
-      prev.map((item, i) => (i === index ? !item : item))
-    );
-  };
+    setSelectedItems((prev) => prev.map((item, i) => (i === index ? !item : item)))
+  }
 
-  const handleItemChange = (
-    index: number,
-    field: "item" | "price_eur",
-    value: string
-  ) => {
+  const handleItemChange = (index: number, field: "item" | "price_eur", value: string) => {
     setLocalResponseMessage((prev) => {
-      const newItems = [...prev.items];
+      const newItems = [...prev.items]
       if (field === "item") {
-        newItems[index] = { ...newItems[index], item: value };
+        newItems[index] = { ...newItems[index], item: value }
       } else {
-        const numValue = parseFloat(value);
+        const numValue = parseFloat(value)
         if (!isNaN(numValue)) {
-          newItems[index] = { ...newItems[index], price_eur: numValue };
+          newItems[index] = { ...newItems[index], price_eur: numValue }
         }
       }
-      return { ...prev, items: newItems };
-    });
-  };
+      return { ...prev, items: newItems }
+    })
+  }
 
   return (
     <Card className="w-full max-w-3xl">
       <CardHeader>
         <CardTitle>
           <div className="w-full flex justify-between items-center">
-            <p> Receipt Details </p>
+            <p>Receipt Details</p>
             <NotionCredentialsDialog
               token={token}
               database_id={database_id}
@@ -167,6 +143,22 @@ export default function ReceiptDetails({
             "Upload to Notion"
           )}
         </Button>
+        {(!token || !database_id) && (
+          <Alert variant="default" className="mb-4 p-3">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between w-full">
+              <span>Connect your Notion account to save receipts.</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2"
+                onClick={() => setShowCredentialsDialog(true)}
+              >
+                Connect Notion
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex items-center space-x-2 mb-4">
           <span className="text-sm font-medium">Date:</span>
           <Popover>
@@ -183,12 +175,7 @@ export default function ReceiptDetails({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateChange}
-                initialFocus
-              />
+              <Calendar mode="single" selected={date} onSelect={handleDateChange} initialFocus />
             </PopoverContent>
           </Popover>
         </div>
@@ -196,10 +183,7 @@ export default function ReceiptDetails({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[30px]">
-                <Checkbox
-                  checked={selectedItems.every(Boolean)}
-                  onCheckedChange={toggleSelectAll}
-                />
+                <Checkbox checked={selectedItems.every(Boolean)} onCheckedChange={toggleSelectAll} />
               </TableHead>
               <TableHead>Item</TableHead>
               <TableHead className="text-right w-[80px]">Price (EUR)</TableHead>
@@ -217,9 +201,7 @@ export default function ReceiptDetails({
                 <TableCell>
                   <Input
                     value={item.item}
-                    onChange={(e) =>
-                      handleItemChange(index, "item", e.target.value)
-                    }
+                    onChange={(e) => handleItemChange(index, "item", e.target.value)}
                     className="w-full px-0 py-0 border-0"
                   />
                 </TableCell>
@@ -227,9 +209,7 @@ export default function ReceiptDetails({
                   <Input
                     type="number"
                     value={item.price_eur.toFixed(2)}
-                    onChange={(e) =>
-                      handleItemChange(index, "price_eur", e.target.value)
-                    }
+                    onChange={(e) => handleItemChange(index, "price_eur", e.target.value)}
                     className="w-full text-right px-0 py-0 border-0"
                     step="0.01"
                     min="0"
@@ -241,5 +221,5 @@ export default function ReceiptDetails({
         </Table>
       </CardContent>
     </Card>
-  );
+  )
 }
