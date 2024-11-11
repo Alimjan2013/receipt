@@ -178,14 +178,14 @@ export default function ReceiptDetails({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">
+              <TableHead className="w-[30px]">
                 <Checkbox
                   checked={selectedItems.every(Boolean)}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
               <TableHead>Item</TableHead>
-              <TableHead className="text-right">Price (EUR)</TableHead>
+              <TableHead className="text-right w-[80px]">Price (EUR)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
