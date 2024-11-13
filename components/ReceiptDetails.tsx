@@ -117,6 +117,7 @@ export default function ReceiptDetails({
     handleItemChange,
     setLocalResponseMessage,
     setIsItemDateChanged,
+    setSelectedItems,
   }
 
   return (

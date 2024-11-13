@@ -12,6 +12,7 @@ export interface ReceiptContextType {
   handleItemChange: (index: number, field: "item" | "price_eur", value: string) => void
   setLocalResponseMessage: React.Dispatch<React.SetStateAction<ResponseMessage>>
   setIsItemDateChanged: React.Dispatch<React.SetStateAction<boolean>>
+  setSelectedItems: React.Dispatch<React.SetStateAction<boolean[]>>
 }
 
 export const ReceiptContext = React.createContext<ReceiptContextType | undefined>(undefined)

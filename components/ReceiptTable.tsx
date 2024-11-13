@@ -2,7 +2,7 @@
 
 import React from "react"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -32,10 +32,24 @@ export function ReceiptTable() {
     handleItemChange,
     setLocalResponseMessage,
     setIsItemDateChanged,
+    setSelectedItems,
   } = useReceiptContext()
 
   if (!localResponseMessage) {
     return null
+  }
+
+  const addNewItem = () => {
+    const newItem = {
+      item: "",
+      price_eur: 0,
+      date: date || new Date(),
+    }
+    setLocalResponseMessage((prev) => ({
+      ...prev,
+      items: [...prev.items, newItem],
+    }))
+    setSelectedItems((prev) => [...prev, true])
   }
 
   return (
@@ -124,6 +138,14 @@ export function ReceiptTable() {
                 .filter((item, index) => selectedItems[index])
                 .reduce((acc, item) => acc + item.price_eur, 0)
                 .toFixed(2)}
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell colSpan={4}>
+              <Button onClick={addNewItem} variant="outline" className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Item
+              </Button>
             </TableCell>
           </TableRow>
         </TableFooter>
