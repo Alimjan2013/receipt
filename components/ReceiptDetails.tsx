@@ -9,7 +9,7 @@ import NotionCredentialsDialog from "./NotionCredentialsDialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ResponseMessage } from "@/lib/type"
 import { ReceiptTable } from "./ReceiptTable"
-import { ReceiptContext, ReceiptContextType } from "./ReceiptContext"
+import { ReceiptContext, ReceiptContextType, HeaderMapping } from "./ReceiptContext"
 
 interface ReceiptDetailsProps {
   responseMessage: ResponseMessage
@@ -32,6 +32,11 @@ export default function ReceiptDetails({
   const [localResponseMessage, setLocalResponseMessage] = useState(responseMessage)
   const [selectedItems, setSelectedItems] = useState(responseMessage.items.map(() => true))
   const [date, setDate] = useState<Date | undefined>(new Date(localResponseMessage.date))
+  const [headerMapping, setHeaderMapping] = useState<HeaderMapping>({
+    item: "Item",
+    price_eur: "Price (EUR)",
+    date: "Date",
+  })
 
   useEffect(() => {
     setLocalResponseMessage(responseMessage)
@@ -66,6 +71,7 @@ export default function ReceiptDetails({
         body: JSON.stringify({
           table: { ...localResponseMessage, items: itemsToUpload },
           auth: { token: token, database_id: database_id },
+          headerMapping: headerMapping,
         }),
       })
       const data = await response.json()
@@ -111,6 +117,7 @@ export default function ReceiptDetails({
     selectedItems,
     date,
     isItemDateChanged,
+    headerMapping,
     handleDateChange,
     toggleSelectAll,
     toggleItemSelection,
@@ -118,6 +125,7 @@ export default function ReceiptDetails({
     setLocalResponseMessage,
     setIsItemDateChanged,
     setSelectedItems,
+    setHeaderMapping,
   }
 
   return (

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ResponseMessage } from "@/lib/type";
+import { HeaderMapping } from "@/components/ReceiptContext";
 
 export async function POST(request: NextRequest) {
   const {
     table,
     auth,
-  }: { table: ResponseMessage; auth: { token: string; database_id: string } } =
-    await request.json();
+    headerMapping,
+  }: {
+    table: ResponseMessage;
+    auth: { token: string; database_id: string };
+    headerMapping: HeaderMapping;
+  } = await request.json();
 
   for (const item of table.items) {
     const notionResponse = await fetch("https://api.notion.com/v1/pages", {
@@ -19,15 +24,15 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         parent: { type: "database_id", database_id: auth.database_id },
         properties: {
-          title: {
+          [headerMapping.item]: {
             type: "title",
             title: [{ type: "text", text: { content: item.item } }],
           },
-          price: {
+          [headerMapping.price_eur]: {
             type: "number",
             number: item.price_eur,
           },
-          Date: {
+          [headerMapping.date]: {
             type: "date",
             date: { start: item.date },
           },

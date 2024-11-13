@@ -1,8 +1,8 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Plus } from "lucide-react"
+import { CalendarIcon, Plus, Edit2 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,6 +26,7 @@ export function ReceiptTable() {
     selectedItems,
     date,
     isItemDateChanged,
+    headerMapping,
     handleDateChange,
     toggleSelectAll,
     toggleItemSelection,
@@ -33,7 +34,10 @@ export function ReceiptTable() {
     setLocalResponseMessage,
     setIsItemDateChanged,
     setSelectedItems,
+    setHeaderMapping,
   } = useReceiptContext()
+
+  const [editingHeader, setEditingHeader] = useState<keyof typeof headerMapping | null>(null)
 
   if (!localResponseMessage) {
     return null
@@ -52,10 +56,44 @@ export function ReceiptTable() {
     setSelectedItems((prev) => [...prev, true])
   }
 
+  const handleHeaderEdit = (key: keyof typeof headerMapping) => {
+    setEditingHeader(key)
+  }
+
+  const handleHeaderChange = (key: keyof typeof headerMapping, value: string) => {
+    setHeaderMapping((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleHeaderBlur = () => {
+    setEditingHeader(null)
+  }
+
+  const renderTableHeader = (key: keyof typeof headerMapping) => {
+    if (editingHeader === key) {
+      return (
+        <Input
+          value={headerMapping[key]}
+          onChange={(e) => handleHeaderChange(key, e.target.value)}
+          onBlur={handleHeaderBlur}
+          className="w-full px-2 py-1 text-left font-medium text-sm"
+          autoFocus
+        />
+      )
+    }
+    return (
+      <div className="flex items-center justify-between">
+        <span>{headerMapping[key]}</span>
+        <Button variant="ghost" size="sm" onClick={() => handleHeaderEdit(key)}>
+          <Edit2 className="h-4 w-4" />
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex items-center space-x-2 mb-4">
-        <span className="text-sm font-medium">Date:</span>
+        <span className="text-sm font-medium">{headerMapping.date}:</span>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -80,9 +118,9 @@ export function ReceiptTable() {
             <TableHead className="w-[30px]">
               <Checkbox checked={selectedItems.every(Boolean)} onCheckedChange={toggleSelectAll} />
             </TableHead>
-            <TableHead>Item</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="text-right w-[80px]">€ Price</TableHead>
+            <TableHead>{renderTableHeader("item")}</TableHead>
+            <TableHead>{renderTableHeader("date")}</TableHead>
+            <TableHead className="text-right w-[80px]">{renderTableHeader("price_eur")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="w-full">
@@ -132,7 +170,7 @@ export function ReceiptTable() {
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3}>Selected Total Price</TableCell>
+            <TableCell colSpan={3}>Selected Total {headerMapping.price_eur}</TableCell>
             <TableCell className="text-right pr-4">
               {localResponseMessage.items
                 .filter((item, index) => selectedItems[index])
@@ -144,7 +182,7 @@ export function ReceiptTable() {
             <TableCell colSpan={4}>
               <Button onClick={addNewItem} variant="outline" className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Add New Item
+                Add New {headerMapping.item}
               </Button>
             </TableCell>
           </TableRow>
