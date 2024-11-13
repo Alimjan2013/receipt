@@ -71,7 +71,7 @@ export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage:
 
 
   return (
-    <Card className="md:mb-0 mb-8">
+    <Card className="md:mb-0 mb-8 col-span-4 ">
       <CardHeader>
         <CardTitle>Receipt OCR</CardTitle>
       </CardHeader>

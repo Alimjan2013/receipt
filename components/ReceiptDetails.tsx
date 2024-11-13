@@ -144,7 +144,7 @@ export default function ReceiptDetails({
   };
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl col-span-6">
       <CardHeader>
         <CardTitle>
           <div className="w-full flex justify-between items-center">

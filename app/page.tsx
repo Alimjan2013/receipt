@@ -35,7 +35,7 @@ export default function Component() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="md:grid grid-cols-2 grid-rows-1 gap-2 ">
+      <div className="md:grid grid-cols-10 grid-rows-1 gap-2 ">
         <ReceiptOCR setResponseMessage={setResponseMessage} />
 
         {responseMessage && (
