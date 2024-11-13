@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Receipt 
 
-## Getting Started
+An application that simplifies receipt organization through OCR (Optical Character Recognition) and Notion integration. Upload receipt images to extract text, automatically translate non-English content, and save the organized data directly to your Notion workspace.
 
-First, run the development server:
+## 🚀 Demo
 
+Try it out: [Receipt App](https://receipt-self.vercel.app/)
+
+## ✨ Features
+
+- **Smart Receipt OCR**: Upload images of receipts to extract text and structure data automatically
+- **Intelligent Translation**: Automatically detects and translates non-English receipts to English
+- **Notion Integration**: Seamlessly save receipt data to your personal Notion workspace
+- **Data Privacy**: Local browser storage for credentials, ensuring your Notion access remains private
+- **Edit Before Save**: Review and modify extracted data before uploading to Notion
+- **Multi-Currency Support**: Handles receipts in various currencies with EUR conversion
+
+## 🔧 Setup
+
+### Prerequisites
+- OpenAI API key for translation and data structuring
+- Notion account and integration token
+
+### Notion Integration Setup
+
+1. **Create Notion Integration**
+   - Visit [Notion Developers](https://developers.notion.com/docs/create-a-notion-integration#getting-started)
+   - Create a new integration and copy the token
+   - Grant database access to your integration
+
+2. **Configure Database**
+   - Create a new Notion database or use an existing one
+   - Share the database with your integration
+   - Copy the database URL (the app will extract the ID automatically)
+
+> 🔒 **Security Note**: Your Notion credentials are stored only in your browser's local storage and are never transmitted to our servers.
+
+## 🛠️ Technologies
+
+- **Frontend**: Next.js 15+, Shadcn/UI, TailwindCSS
+- **OCR Engine**: Tesseract.js (browser-based processing)
+- **AI Processing**: GPT-4 for translation and data structuring
+- **Integration**: Notion API
+
+## 🚀 Deploy Your Own
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone github.com/Alimjan2013/receipt.git
