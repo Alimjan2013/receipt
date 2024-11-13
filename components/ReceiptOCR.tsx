@@ -6,18 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { ResponseMessage } from "@/lib/type";
 
-interface Item {
-  item: string;
-  price_eur: number;
-}
-
-interface ResponseMessage {
-  date: string;
-  items: Item[];
-}
-
-export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage: React.Dispatch<SetStateAction<ResponseMessage | null>> }) {
+export default function ReceiptOCR({
+  setResponseMessage,
+}: {
+  setResponseMessage: React.Dispatch<SetStateAction<ResponseMessage | null>>;
+}) {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,15 +32,15 @@ export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage:
         const worker = await createWorker("eng");
         const ret = await worker.recognize(image);
         const recognizedText = ret.data.text;
-        
+
         const response = await fetch("/api/createReceiptTable", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ text: recognizedText }),
-          });
-          const data = await response.json();
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: recognizedText }),
+        });
+        const data = await response.json();
         const jsonString = data.replace(/```json|```/g, "").trim();
         const jsonObject = JSON.parse(jsonString);
         const isValidDate = (dateString: string) => {
@@ -53,8 +48,10 @@ export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage:
           return !isNaN(date.getTime());
         };
         const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-        
-        jsonObject.date = isValidDate(jsonObject.date) ? jsonObject.date : today;
+
+        jsonObject.date = isValidDate(jsonObject.date)
+          ? jsonObject.date
+          : today;
         setResponseMessage(jsonObject);
         await worker.terminate();
       } catch (error) {
@@ -67,8 +64,6 @@ export default function ReceiptOCR({ setResponseMessage }: { setResponseMessage:
       }
     }
   };
-
-
 
   return (
     <Card className="md:mb-0 mb-8 col-span-4 ">

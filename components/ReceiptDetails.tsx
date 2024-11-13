@@ -30,16 +30,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ResponseMessage } from "@/lib/type";
 
-interface Item {
-  item: string;
-  price_eur: number;
-}
 
-interface ResponseMessage {
-  date: string;
-  items: Item[];
-}
+
 
 interface ReceiptDetailsProps {
   responseMessage: ResponseMessage;

@@ -1,25 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ResponseMessage } from "@/lib/type";
 import { Button } from "@/components/ui/button";
 import ReceiptDetails from "@/components/ReceiptDetails";
 import ReceiptOCR from "@/components/ReceiptOCR";
 import { HeartIcon } from "lucide-react";
 
-interface Item {
-  item: string;
-  price_eur: number;
-}
-
-interface ResponseMessage {
-  date: string;
-  items: Item[];
-}
-
 export default function Component() {
   const [token, setToken] = useState("");
   const [database_id, setDatabase_id] = useState("");
-  const [responseMessage, setResponseMessage] = useState<ResponseMessage | null>(null);
+  const [responseMessage, setResponseMessage] =
+    useState<ResponseMessage | null>(null);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
 
   useEffect(() => {

@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-interface Item {
-  item: string;
-  price_eur: number;
-}
+import { ResponseMessage } from "@/lib/type";
 
-interface ResponseMessage {
-  date: string;
-  items: Item[];
-}
 const isValidDate = (dateString: string) => {
   const date = new Date(dateString);
   return !isNaN(date.getTime());
