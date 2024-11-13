@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ResponseMessage } from "@/lib/type";
 
-const isValidDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return !isNaN(date.getTime());
-};
-const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-
 export async function POST(request: NextRequest) {
   const {
     table,
@@ -35,7 +29,7 @@ export async function POST(request: NextRequest) {
           },
           Date: {
             type: "date",
-            date: { start: isValidDate(table.date) ? table.date : today },
+            date: { start: item.date },
           },
         },
       }),

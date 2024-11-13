@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { ResponseMessage } from "@/lib/type";
+import { ResponseMessage,Item } from "@/lib/type";
 
 export default function ReceiptOCR({
   setResponseMessage,
@@ -43,15 +43,22 @@ export default function ReceiptOCR({
         const data = await response.json();
         const jsonString = data.replace(/```json|```/g, "").trim();
         const jsonObject = JSON.parse(jsonString);
-        const isValidDate = (dateString: string) => {
+        const isValidDate = (dateString: string | Date) => {
           const date = new Date(dateString);
           return !isNaN(date.getTime());
         };
-        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+        const today = new Date(); // Get today's date in YYYY-MM-DD format
 
         jsonObject.date = isValidDate(jsonObject.date)
           ? jsonObject.date
           : today;
+        jsonObject.items = jsonObject.items.map((item: Item) => ({
+          ...item,
+          date: isValidDate(jsonObject.date)
+          ? jsonObject.date
+          : today,
+        }));
+
         setResponseMessage(jsonObject);
         await worker.terminate();
       } catch (error) {

@@ -32,9 +32,6 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ResponseMessage } from "@/lib/type";
 
-
-
-
 interface ReceiptDetailsProps {
   responseMessage: ResponseMessage;
   token: string;
@@ -51,6 +48,7 @@ export default function ReceiptDetails({
   setDatabase_id,
 }: ReceiptDetailsProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isItemDateChanged, setIsItemDateChanged] = useState(false);
   const [showCredentialsDialog, setShowCredentialsDialog] = useState(false);
   const [localResponseMessage, setLocalResponseMessage] =
     useState(responseMessage);
@@ -72,8 +70,13 @@ export default function ReceiptDetails({
     if (newDate) {
       setLocalResponseMessage((prev) => ({
         ...prev,
-        date: newDate.toLocaleDateString("en-CA"),
+        date: newDate,
+        items: prev.items.map((item) => ({
+          ...item,
+          date: newDate,
+        })),
       }));
+      setIsItemDateChanged(false);
     }
   };
 
@@ -195,7 +198,7 @@ export default function ReceiptDetails({
                 variant={"outline"}
                 className={cn(
                   "w-[240px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
+                  isItemDateChanged && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -222,6 +225,7 @@ export default function ReceiptDetails({
                 />
               </TableHead>
               <TableHead>Item</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead className="text-right w-[80px]">€ Price</TableHead>
             </TableRow>
           </TableHeader>
@@ -234,7 +238,7 @@ export default function ReceiptDetails({
                     onCheckedChange={() => toggleItemSelection(index)}
                   />
                 </TableCell>
-                <TableCell >
+                <TableCell>
                   <Input
                     value={item.item}
                     onChange={(e) =>
@@ -243,6 +247,23 @@ export default function ReceiptDetails({
                     className="w-full px-0 py-0 border-0"
                   />
                 </TableCell>
+                <TableCell>
+                  <Input
+                    type="date"
+                    value={format(new Date(localResponseMessage.items[index].date), "yyyy-MM-dd")}
+                    onChange={(e) =>{
+                      setLocalResponseMessage((prev) => ({
+                        ...prev,
+                        items: prev.items.map((item, i) =>
+                          i === index ? { ...item, date: new Date(e.target.value) } : item
+                        ),
+                      }));
+                      setIsItemDateChanged(true)}
+                    }
+                    className="w-full px-0 py-0 border-0"
+                  ></Input>
+                </TableCell>
+
                 <TableCell className="text-right">
                   <Input
                     type="number"
@@ -260,8 +281,7 @@ export default function ReceiptDetails({
           </TableBody>
           <TableFooter>
             <TableRow>
-     
-              <TableCell colSpan={2}>Selected Total Price</TableCell>
+              <TableCell colSpan={3}>Selected Total Price</TableCell>
               <TableCell className="text-right pr-4">
                 {localResponseMessage.items
                   .filter((item, index) => selectedItems[index])
