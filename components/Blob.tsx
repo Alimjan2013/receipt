@@ -10,6 +10,7 @@ export default function UploadPage() {
   const [blob, setBlob] = useState<PutBlobResult | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  
   const convertToAvif = async (file: File): Promise<ArrayBuffer> => {
     const img = await createImageBitmap(file);
     const canvas = document.createElement('canvas');
@@ -24,13 +25,13 @@ export default function UploadPage() {
     }
 
     return encode(imageData, {
-      cqLevel: 33,
-      cqAlphaLevel: 33,
-      denoiseLevel: 0,
+      cqLevel: 45,          // Increased from 33 for more compression
+      cqAlphaLevel: 45,     // Increased from 33 for more compression
+      denoiseLevel: 20,     // Added some denoising
       tileRowsLog2: 0,
       tileColsLog2: 0,
       speed: 8,
-      subsample: 1,
+      subsample: 2,         // Changed from 1 to 2 for 4:2:2 chroma subsampling
       chromaDeltaQ: false,
       sharpness: 0,
     });
