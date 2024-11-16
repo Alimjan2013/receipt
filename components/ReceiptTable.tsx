@@ -81,9 +81,14 @@ export function ReceiptTable() {
       )
     }
     return (
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between group">
         <span>{headerMapping[key]}</span>
-        <Button variant="ghost" size="sm" onClick={() => handleHeaderEdit(key)}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleHeaderEdit(key)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <Edit2 className="h-4 w-4" />
         </Button>
       </div>
