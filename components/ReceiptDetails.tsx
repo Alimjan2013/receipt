@@ -63,26 +63,31 @@ export default function ReceiptDetails({
     setIsUploading(true)
     try {
       const itemsToUpload = localResponseMessage.items.filter((_, index) => selectedItems[index])
+      
       const response = await fetch("/api/uploadToNotion", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          table: { ...localResponseMessage, items: itemsToUpload },
-          auth: { token: token, database_id: database_id },
-          headerMapping: headerMapping,
+          items: itemsToUpload,
+          auth: { token, database_id },
+          headerMapping,
         }),
       })
-      const data = await response.json()
-      console.log(data)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to upload to Notion")
+      }
+
       toast.success("Upload successful", {
         description: "The selected receipt data has been uploaded to Notion.",
       })
     } catch (error) {
       console.error("Error uploading to Notion:", error)
       toast.error("Upload failed", {
-        description: "There was an error uploading the data to Notion.",
+        description: error instanceof Error ? error.message : "There was an error uploading the data to Notion.",
       })
     } finally {
       setIsUploading(false)
