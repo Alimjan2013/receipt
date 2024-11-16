@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { ResponseMessage,Item } from "@/lib/type";
+import { ResponseMessage, Item } from "@/lib/type";
+import Upload from "@/components/Blob";
 
 export default function ReceiptOCR({
   setResponseMessage,
@@ -54,9 +55,7 @@ export default function ReceiptOCR({
           : today;
         jsonObject.items = jsonObject.items.map((item: Item) => ({
           ...item,
-          date: isValidDate(jsonObject.date)
-          ? jsonObject.date
-          : today,
+          date: isValidDate(jsonObject.date) ? jsonObject.date : today,
         }));
 
         setResponseMessage(jsonObject);
@@ -108,6 +107,7 @@ export default function ReceiptOCR({
             />
           </div>
         )}
+        <Upload />
       </CardContent>
     </Card>
   );
