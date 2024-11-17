@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ResponseMessage } from "@/lib/type"
 import { ReceiptTable } from "./ReceiptTable"
 import { ReceiptContext, ReceiptContextType, HeaderMapping } from "./ReceiptContext"
+import QualityReport from "./QualityReport"
 
 interface ReceiptDetailsProps {
   responseMessage: ResponseMessage
@@ -140,6 +141,8 @@ export default function ReceiptDetails({
           <CardTitle>
             <div className="w-full flex justify-between items-center">
               <p>Receipt Details</p>
+              <div>
+              <QualityReport />
               <NotionCredentialsDialog
                 token={token}
                 database_id={database_id}
@@ -148,6 +151,9 @@ export default function ReceiptDetails({
                 showCredentialsDialog={showCredentialsDialog}
                 setShowCredentialsDialog={setShowCredentialsDialog}
               />
+              </div>
+            
+
             </div>
           </CardTitle>
         </CardHeader>

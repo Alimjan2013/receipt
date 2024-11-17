@@ -7,7 +7,6 @@ import { Loader2Icon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ResponseMessage, Item } from "@/lib/type";
-import Upload from "@/components/Blob";
 
 export default function ReceiptOCR({
   setResponseMessage,
@@ -107,7 +106,6 @@ export default function ReceiptOCR({
             />
           </div>
         )}
-        <Upload />
       </CardContent>
     </Card>
   );
