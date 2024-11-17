@@ -1,37 +1,39 @@
-import { useState, SetStateAction } from "react";
-import { createWorker } from "tesseract.js";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2Icon } from "lucide-react";
-import Image from "next/image";
-import { toast } from "sonner";
-import { ResponseMessage, Item } from "@/lib/type";
+'use client'
+
+import { useState, SetStateAction } from "react"
+import { createWorker } from "tesseract.js"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2Icon } from 'lucide-react'
+import Image from "next/image"
+import { toast } from "sonner"
+import { ResponseMessage, Item } from "@/lib/type"
+import ImageConverter from "./ImageConverter"
 
 export default function ReceiptOCR({
   setResponseMessage,
 }: {
-  setResponseMessage: React.Dispatch<SetStateAction<ResponseMessage | null>>;
+  setResponseMessage: React.Dispatch<SetStateAction<ResponseMessage | null>>
 }) {
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [avifBlob, setAvifBlob] = useState<Blob | null>(null)
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+  const handleImageConverted = (convertedBlob: Blob, originalFile: File) => {
+    setImage(originalFile)
+    setImagePreview(URL.createObjectURL(originalFile))
+    setAvifBlob(convertedBlob)
+    localStorage.setItem('avifImage', URL.createObjectURL(convertedBlob))
+  }
 
   const handleButtonClick = async () => {
     if (image) {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        const worker = await createWorker("eng");
-        const ret = await worker.recognize(image);
-        const recognizedText = ret.data.text;
+        const worker = await createWorker("eng")
+        const ret = await worker.recognize(image)
+        const recognizedText = ret.data.text
 
         const response = await fetch("/api/createReceiptTable", {
           method: "POST",
@@ -39,36 +41,41 @@ export default function ReceiptOCR({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ text: recognizedText }),
-        });
-        const data = await response.json();
-        const jsonString = data.replace(/```json|```/g, "").trim();
-        const jsonObject = JSON.parse(jsonString);
+        })
+        const data = await response.json()
+        const jsonString = data.replace(/```json|```/g, "").trim()
+        const jsonObject = JSON.parse(jsonString)
         const isValidDate = (dateString: string | Date) => {
-          const date = new Date(dateString);
-          return !isNaN(date.getTime());
-        };
-        const today = new Date(); // Get today's date in YYYY-MM-DD format
+          const date = new Date(dateString)
+          return !isNaN(date.getTime())
+        }
+        const today = new Date()
 
         jsonObject.date = isValidDate(jsonObject.date)
           ? jsonObject.date
-          : today;
+          : today.toISOString().split('T')[0]
         jsonObject.items = jsonObject.items.map((item: Item) => ({
           ...item,
-          date: isValidDate(jsonObject.date) ? jsonObject.date : today,
-        }));
+          date: isValidDate(jsonObject.date) ? jsonObject.date : today.toISOString().split('T')[0],
+        }))
 
-        setResponseMessage(jsonObject);
-        await worker.terminate();
+        setResponseMessage(jsonObject)
+        await worker.terminate()
+
+        // Save AVIF image to localStorage after successful OCR
+        if (avifBlob) {
+          localStorage.setItem('avifImage', URL.createObjectURL(avifBlob))
+        }
       } catch (error) {
-        console.error("Error processing image:", error);
+        console.error("Error processing image:", error)
         toast.error("Processing failed", {
           description: "There was an error processing the image.",
-        });
+        })
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-  };
+  }
 
   return (
     <Card className="md:mb-0 mb-8 col-span-4 ">
@@ -77,12 +84,7 @@ export default function ReceiptOCR({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-4">
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="flex-grow"
-          />
+          <ImageConverter onImageConverted={handleImageConverted} />
         </div>
         <Button
           className="w-full"
@@ -108,5 +110,5 @@ export default function ReceiptOCR({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

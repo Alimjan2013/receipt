@@ -1,79 +1,55 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { encode } from '@jsquash/avif'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ThumbsDown, Loader2 } from 'lucide-react'
 import { Label } from "@/components/ui/label"
+import { ResponseMessage } from "@/lib/type"
+import { toast } from "sonner"
 
 
+interface QualityReportProps {
+  responseMessage: ResponseMessage
+}
 
-export default function QualityReport() {
+export default function Component({ responseMessage }: QualityReportProps = { responseMessage: {} as ResponseMessage }) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [isDataCollectionChecked, setIsDataCollectionChecked] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [blob, setBlob] = useState<{ url: string } | null>(null)
-  const [isSavingFeedback, setIsSavingFeedback] = useState(false)
-  const inputFileRef = useRef<HTMLInputElement>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const convertToAvif = async (file: File): Promise<ArrayBuffer> => {
-    const img = await createImageBitmap(file)
-    const canvas = document.createElement('canvas')
-    canvas.width = img.width
-    canvas.height = img.height
-    const ctx = canvas.getContext('2d')
-    ctx?.drawImage(img, 0, 0)
-    const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height)
-
-    if (!imageData) {
-      throw new Error('Failed to get image data')
-    }
-
-    return encode(imageData, {
-      cqLevel: 45,
-      cqAlphaLevel: 45,
-      denoiseLevel: 20,
-      tileRowsLog2: 0,
-      tileColsLog2: 0,
-      speed: 8,
-      subsample: 2,
-      chromaDeltaQ: false,
-      sharpness: 0,
-    })
-  }
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0])
-    }
-  }
-
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      alert('Please select a file first')
+  const handleSubmitFeedback = async () => {
+    if (!isDataCollectionChecked) {
+        toast.error("Please agree to data collection before submitting.")
       return
     }
 
-    setIsUploading(true)
+    setIsSubmitting(true)
 
     try {
-      const avifBuffer = await convertToAvif(selectedFile)
-      const avifBlob = new Blob([avifBuffer], { type: 'image/avif' })
-      const filename = `${selectedFile.name.split('.')[0]}.avif`
+      // 1. Upload image to server and get URL
+      const avifImageUrl = localStorage.getItem('avifImage')
+      if (!avifImageUrl) {
+        throw new Error('No receipt image found. Please try processing the receipt again.')
+      }
+
+      const response = await fetch(avifImageUrl)
+      const blob = await response.blob()
+      const file = new File([blob], 'receipt.avif', { type: 'image/avif' })
+
+      const avifBlob = new Blob([file], { type: 'image/avif' })
+      const filename = `receipt_${Date.now()}.avif`
 
       // Get pre-signed URL
       const presignedUrlResponse = await fetch(`/api/getPresignedUrl?filename=${encodeURIComponent(filename)}&contentType=image/avif`)
       if (!presignedUrlResponse.ok) {
         throw new Error('Failed to get pre-signed URL')
       }
-      const { presignedUrl, publicUrl, fullPath } = await presignedUrlResponse.json()
+      const { presignedUrl, publicUrl } = await presignedUrlResponse.json()
 
       // Upload directly to R2
       const uploadResponse = await fetch(presignedUrl, {
@@ -89,157 +65,94 @@ export default function QualityReport() {
         throw new Error('Failed to upload file')
       }
 
-      setBlob({ url: publicUrl })
-      console.log('File uploaded successfully. Full path:', fullPath)
-    } catch (error) {
-      console.error('Error uploading file:', error)
-      alert('Failed to upload file')
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  const handleSubmitFeedback = async () => {
-    if (!isDataCollectionChecked) {
-      alert("Please agree to data collection before submitting.")
-      return
-    }
-
-    if (!blob) {
-      alert('Please upload an image first')
-      return
-    }
-
-    setIsSavingFeedback(true)
-
-    try {
-      // Simulate fake data for OCR result and processed data
-      const fakeOcrResult = {
-        text: 'Sample OCR text',
-        confidence: 0.95
-      }
-
-      const fakeProcessedData = {
-        items: [
-          { name: 'Item 1', price: 10.99 },
-          { name: 'Item 2', price: 15.99 }
-        ],
-        total: 26.98
-      }
-
-      const response = await fetch('/api/saveFeedback', {
+      // 2. Upload other data together to database
+      const feedbackResponse = await fetch('/api/saveFeedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          image_url: blob.url,
-          ocr_result: fakeOcrResult,
-          processed_data: fakeProcessedData,
+          image_url: publicUrl,
+          ocr_result: responseMessage,
+          processed_data: responseMessage,
           user_comment: comment,
         }),
       })
 
-      if (!response.ok) {
+      if (!feedbackResponse.ok) {
         throw new Error('Failed to save feedback')
       }
 
-      alert('Feedback saved successfully')
+      toast.success('Feedback saved successfully')
       setComment('')
-      setBlob(null)
-      setSelectedFile(null)
       setIsDataCollectionChecked(false)
       setIsPopoverOpen(false)
     } catch (error) {
-      console.error('Error saving feedback:', error)
-      alert('Failed to save feedback')
+      console.error('Error submitting feedback:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit feedback')
     } finally {
-      setIsSavingFeedback(false)
+      setIsSubmitting(false)
     }
   }
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-    <PopoverTrigger asChild>
-      <Button variant="ghost" >
-        <ThumbsDown className=" h-4 w-4" />
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-80">
-      <div className="space-y-4">
-        <h3 className="font-medium">Thank you for helping improve quality!</h3>
-        <Textarea
-          placeholder="Enter your comment here"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
-        <div>
-          <Label htmlFor="file-upload">Upload Picture</Label>
-          <Input
-            id="file-upload"
-            type="file"
-            onChange={handleFileChange}
-            ref={inputFileRef}
-            className="mt-1"
+      <PopoverTrigger asChild>
+        <Button variant="ghost">
+          <ThumbsDown className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-4">
+          <h3 className="font-medium">Thank you for helping improve quality!</h3>
+          <Textarea
+            placeholder="Enter your comment here"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
           />
-        </div>
-        {selectedFile && (
-          <Button onClick={handleUpload} disabled={isUploading}>
-            {isUploading ? (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="dataCollection"
+              checked={isDataCollectionChecked}
+              onCheckedChange={(checked) => setIsDataCollectionChecked(checked as boolean)}
+            />
+            <Label htmlFor="dataCollection" className="text-sm">
+              We will be collecting{' '}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <span className="text-blue-500 cursor-pointer">some data</span>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Data Collection Information</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-2">
+                    <p>We collect the following data:</p>
+                    <ul className="list-disc list-inside mt-2">
+                      <li>Receipt picture</li>
+                      <li>Final table items</li>
+                      <li>Receipt OCR result</li>
+                    </ul>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </Label>
+          </div>
+          <Button
+            onClick={handleSubmitFeedback}
+            disabled={!isDataCollectionChecked || isSubmitting}
+          >
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
+                Submitting...
               </>
             ) : (
-              'Upload'
+              'Submit Feedback'
             )}
           </Button>
-        )}
-        {blob && <p className="text-sm text-green-600">Image uploaded successfully!</p>}
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="dataCollection"
-            checked={isDataCollectionChecked}
-            onCheckedChange={(checked) => setIsDataCollectionChecked(checked as boolean)}
-          />
-          <Label htmlFor="dataCollection" className="text-sm">
-            We will be collecting{' '}
-            <Dialog>
-              <DialogTrigger asChild>
-                <span className="text-blue-500 cursor-pointer">some data</span>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Data Collection Information</DialogTitle>
-                </DialogHeader>
-                <div className="mt-2">
-                  <p>We collect the following data:</p>
-                  <ul className="list-disc list-inside mt-2">
-                    <li>Receipt picture</li>
-                    <li>Final table items</li>
-                    <li>Receipt OCR result</li>
-                  </ul>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </Label>
         </div>
-        <Button
-          onClick={handleSubmitFeedback}
-          disabled={!isDataCollectionChecked || !blob || isSavingFeedback}
-        >
-          {isSavingFeedback ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            'Submit Feedback'
-          )}
-        </Button>
-      </div>
-    </PopoverContent>
-  </Popover>
-    
+      </PopoverContent>
+    </Popover>
   )
 }

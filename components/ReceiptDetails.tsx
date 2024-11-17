@@ -142,7 +142,7 @@ export default function ReceiptDetails({
             <div className="w-full flex justify-between items-center">
               <p>Receipt Details</p>
               <div>
-              <QualityReport />
+              <QualityReport responseMessage={localResponseMessage} />
               <NotionCredentialsDialog
                 token={token}
                 database_id={database_id}
