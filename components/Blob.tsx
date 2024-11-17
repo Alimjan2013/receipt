@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef,  } from 'react';
 import { encode } from '@jsquash/avif';
 
 export default function UploadPage() {
   const inputFileRef = useRef<HTMLInputElement>(null);
   const [blob, setBlob] = useState<{ url: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [userComment, setUserComment] = useState('');
+  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
+
+
+
 
   const convertToAvif = async (file: File): Promise<ArrayBuffer> => {
     const img = await createImageBitmap(file);
@@ -79,6 +84,57 @@ export default function UploadPage() {
     }
   };
 
+  const handleSaveFeedback = async () => {
+    if (!blob) {
+      alert('Please upload an image first');
+      return;
+    }
+
+    setIsSavingFeedback(true);
+
+    try {
+      // Simulate fake data for OCR result and processed data
+      const fakeOcrResult = {
+        text: 'Sample OCR text',
+        confidence: 0.95
+      };
+
+      const fakeProcessedData = {
+        items: [
+          { name: 'Item 1', price: 10.99 },
+          { name: 'Item 2', price: 15.99 }
+        ],
+        total: 26.98
+      };
+
+      const response = await fetch('/api/saveFeedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: blob.url,
+          ocr_result: fakeOcrResult,
+          processed_data: fakeProcessedData,
+          user_comment: userComment,
+
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save feedback');
+      }
+
+      alert('Feedback saved successfully');
+      setUserComment('');
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      alert('Failed to save feedback');
+    } finally {
+      setIsSavingFeedback(false);
+    }
+  };
+
   return (
     <>
       <h1>Upload Your Receipt</h1>
@@ -91,7 +147,17 @@ export default function UploadPage() {
       </form>
       {blob && (
         <div>
-          Blob url: <a href={blob.url}>{blob.url}</a>
+          <p>Blob url: <a href={blob.url}>{blob.url}</a></p>
+          <textarea
+            value={userComment}
+            onChange={(e) => setUserComment(e.target.value)}
+            placeholder="Enter your comment here"
+            rows={4}
+            cols={50}
+          />
+          <button onClick={handleSaveFeedback} disabled={isSavingFeedback}>
+            {isSavingFeedback ? 'Saving...' : 'Save Feedback'}
+          </button>
         </div>
       )}
     </>
